@@ -14,10 +14,10 @@
 
     <style>
         :root {
-            --primary: #0a84ff; /* iOS Active Blue */
-            --success-green: #34c759; /* iOS Native Vibrant Green */
-            --danger-trans: rgba(255, 69, 58, 0.65); /* Bold transparent iOS Red */
-            --danger-hover: rgba(255, 69, 58, 1);     /* Full bright on hover */
+            --primary: #0a84ff; 
+            --success-green: #34c759; 
+            --danger-trans: rgba(255, 69, 58, 0.65); 
+            --danger-hover: rgba(255, 69, 58, 1);     
             --glass-bg: rgba(20, 20, 25, 0.5);
             --glass-border: rgba(255, 255, 255, 0.08);
             --text-main: #ffffff;
@@ -59,7 +59,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         .brand-icon {
@@ -77,42 +77,13 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* Countdown Area */
-        .countdown-box {
-            margin-bottom: 2.5rem;
-        }
-
-        #timer {
-            font-size: 4.2rem;
-            font-weight: 200;
-            letter-spacing: -2px;
-            font-variant-numeric: tabular-nums;
-            margin: 0;
-            background: linear-gradient(180deg, #ffffff 30%, rgba(255, 255, 255, 0.6) 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
-            line-height: 1;
-        }
-
-        #endTimeText {
-            font-size: 0.9rem;
-            margin: 0.8rem 0 0 0;
-            letter-spacing: 0.3px;
-            font-weight: 400;
-            color: var(--text-muted);
-            display: none;
-            transition: color 0.3s ease;
-        }
-
         /* Centered Time Picker container */
         .input-group {
             background: rgba(0, 0, 0, 0.25);
             border: 1px solid rgba(255, 255, 255, 0.04);
             border-radius: 16px;
             padding: 0.85rem 1.25rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -141,6 +112,43 @@
         input[type="time"]:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+
+        /* Countdown Area */
+        .countdown-box {
+            margin-bottom: 1.5rem;
+            display: none; /* Hidden until punched in */
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #timer {
+            font-size: 4.2rem;
+            font-weight: 200;
+            letter-spacing: -2px;
+            font-variant-numeric: tabular-nums;
+            margin: 0;
+            background: linear-gradient(180deg, #ffffff 30%, rgba(255, 255, 255, 0.6) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+            line-height: 1;
+        }
+
+        #endTimeText {
+            font-size: 1.15rem; /* Increased size */
+            margin: 0.8rem 0 0 0;
+            letter-spacing: 0.5px;
+            font-weight: 600; /* Bolder font */
+            color: var(--mint-glow); /* Changed to mint green for visibility */
+            display: none;
+            transition: color 0.3s ease;
+            text-shadow: 0 2px 10px rgba(0, 245, 160, 0.2);
         }
 
         .action-container {
@@ -213,15 +221,17 @@
         <span class="brand-name">Mint</span>
     </div>
 
-    <div class="countdown-box">
-        <div id="timer">00:00:00</div>
-        <p id="endTimeText"></p>
-    </div>
-    
+    <!-- Time Input is now at the top -->
     <div class="input-group">
         <input type="time" id="punchTime" required>
     </div>
 
+    <!-- Countdown Box is moved below the input and hidden initially -->
+    <div class="countdown-box" id="countdownBox">
+        <div id="timer">00:00:00</div>
+        <p id="endTimeText"></p>
+    </div>
+    
     <div class="action-container">
         <button id="actionBtn" class="btn-punch" type="button">Punch In</button>
     </div>
@@ -232,14 +242,11 @@
     let isCountingDown = false;
 
     window.addEventListener('DOMContentLoaded', () => {
-        // 1. Check if a shift is already saved in localStorage when the app loads
         const savedShiftEnd = localStorage.getItem('mintShiftEndTime');
         
         if (savedShiftEnd) {
-            // Resume the countdown using the saved timestamp
             resumeCountdown(Number(savedShiftEnd));
         } else {
-            // Otherwise, just initialize the current time
             initCurrentTime();
         }
         
@@ -252,10 +259,8 @@
     });
 
     function initCurrentTime() {
-        const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        document.getElementById('punchTime').value = `${hours}:${minutes}`;
+        // App opens with 00:00 by default
+        document.getElementById('punchTime').value = '00:00';
     }
 
     function handleButtonAction() {
@@ -268,7 +273,9 @@
 
     function startCountdown() {
         const timeInput = document.getElementById('punchTime').value;
-        if (!timeInput) return;
+        if (!timeInput || timeInput === '00:00' && !confirm("You are punching in at 00:00. Continue?")) {
+            if(!timeInput) return;
+        }
 
         const [punchHours, punchMinutes] = timeInput.split(':').map(Number);
 
@@ -284,7 +291,6 @@
         targetDate.setSeconds(0);
         targetDate.setMilliseconds(0);
 
-        // 2. Save the end time to localStorage before running the timer
         localStorage.setItem('mintShiftEndTime', targetDate.getTime());
         
         runTimer(targetDate);
@@ -295,8 +301,10 @@
         runTimer(targetDate);
     }
 
-    // 3. Extracted the core timer logic into a reusable function
     function runTimer(targetDate) {
+        // Reveal the countdown box
+        document.getElementById('countdownBox').style.display = 'block';
+
         // Format Target Output Clock Time
         let endHours = targetDate.getHours();
         const endMinutes = String(targetDate.getMinutes()).padStart(2, '0');
@@ -305,7 +313,7 @@
 
         const endEl = document.getElementById('endTimeText');
         endEl.innerText = `Ends at ${String(endHours).padStart(2, '0')}:${endMinutes} ${ampm}`;
-        endEl.style.color = "var(--text-muted)";
+        endEl.style.color = "var(--mint-glow)";
         endEl.style.display = "block";
 
         isCountingDown = true;
@@ -329,7 +337,6 @@
                 endEl.innerText = "Shift Completed";
                 endEl.style.color = "var(--success-green)";
                 
-                // Optional: clear local storage when naturally finished
                 localStorage.removeItem('mintShiftEndTime'); 
                 return;
             }
@@ -351,7 +358,6 @@
         isCountingDown = false;
         document.getElementById('punchTime').disabled = false;
         
-        // 4. Clear the saved state from localStorage when reset is clicked
         localStorage.removeItem('mintShiftEndTime');
         
         const actionBtn = document.getElementById('actionBtn');
@@ -368,6 +374,9 @@
         const endEl = document.getElementById('endTimeText');
         endEl.innerText = "";
         endEl.style.display = "none";
+        
+        // Hide the countdown box again on reset
+        document.getElementById('countdownBox').style.display = 'none';
         
         initCurrentTime();
     }
