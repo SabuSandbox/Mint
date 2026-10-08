@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <title>Mint • Shift Tracker</title>
+    <title>Shift</title>
     
     <!-- PWA / Home Screen App Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -292,11 +292,11 @@
 
     <!-- Shift Duration Configuration -->
     <div class="duration-group" id="durationGroup">
-        <span class="duration-label">Shift Length:</span>
+        <span class="duration-label">Working Hours</span>
         <input type="number" id="shiftHours" class="duration-input" min="0" max="24" value="8">
-        <span class="duration-unit">h</span>
+        <span class="duration-unit">H</span>
         <input type="number" id="shiftMinutes" class="duration-input" min="0" max="59" value="30">
-        <span class="duration-unit">m</span>
+        <span class="duration-unit">Mins</span>
     </div>
 
     <!-- Countdown Box is moved below the input and hidden initially -->
@@ -306,7 +306,7 @@
     </div>
     
     <div class="action-container">
-        <button id="actionBtn" class="btn-punch" type="button">Punch In</button>
+        <button id="actionBtn" class="btn-punch" type="button">PUNCH</button>
     </div>
 </div>
 
@@ -424,7 +424,7 @@
                 timerEl.style.webkitTextFillColor = "var(--success-green)";
                 timerEl.innerText = "00:00:00";
                 
-                endEl.innerText = "Shift Completed";
+                endEl.innerText = "Taachlo";
                 endEl.style.color = "var(--success-green)";
                 
                 localStorage.removeItem('mintShiftEndTime'); 
