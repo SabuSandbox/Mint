@@ -92,7 +92,7 @@
             border: 1px solid rgba(255, 255, 255, 0.04);
             border-radius: 16px;
             padding: 0.85rem 1.25rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.75rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -119,6 +119,61 @@
         }
         
         input[type="time"]:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Duration Configuration */
+        .duration-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 0.6rem 1rem;
+            margin-bottom: 1.5rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .duration-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-right: auto;
+            font-weight: 500;
+        }
+
+        .duration-input {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 500;
+            width: 32px;
+            text-align: right;
+            outline: none;
+            font-family: inherit;
+            padding: 0;
+        }
+
+        /* Remove arrows from number input */
+        .duration-input::-webkit-outer-spin-button,
+        .duration-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .duration-input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .duration-unit {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-right: 0.3rem;
+        }
+
+        .duration-input:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
@@ -219,9 +274,9 @@
     <div class="brand-header">
         <svg class="brand-icon" viewBox="0 0 100 100">
             <defs>
-                <linearGradient id='brandGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E
-                    <stop offset='0%25' stop-color='%2300f5a0'/>
-                    <stop offset='100%25' stop-color='%2300d9f5'/>
+                <linearGradient id='brandGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'>
+                    <stop offset='0%25' stop-color='#00f5a0'/>
+                    <stop offset='100%25' stop-color='#00d9f5'/>
                 </linearGradient>
             </defs>
             <path d='M80,20 C50,20 20,40 20,80 C50,80 80,60 80,20 Z' fill='url(#brandGrad)'/>
@@ -233,6 +288,15 @@
     <!-- Time Input is now at the top -->
     <div class="input-group">
         <input type="time" id="punchTime" required>
+    </div>
+
+    <!-- Shift Duration Configuration -->
+    <div class="duration-group" id="durationGroup">
+        <span class="duration-label">Shift Length:</span>
+        <input type="number" id="shiftHours" class="duration-input" min="0" max="24" value="8">
+        <span class="duration-unit">h</span>
+        <input type="number" id="shiftMinutes" class="duration-input" min="0" max="59" value="30">
+        <span class="duration-unit">m</span>
     </div>
 
     <!-- Countdown Box is moved below the input and hidden initially -->
@@ -251,7 +315,15 @@
     let isCountingDown = false;
 
     window.addEventListener('DOMContentLoaded', () => {
+        // Load existing active shift
         const savedShiftEnd = localStorage.getItem('mintShiftEndTime');
+        
+        // Load saved custom duration (if any exists)
+        const savedHours = localStorage.getItem('mintShiftHours');
+        const savedMinutes = localStorage.getItem('mintShiftMinutes');
+        
+        if (savedHours !== null) document.getElementById('shiftHours').value = savedHours;
+        if (savedMinutes !== null) document.getElementById('shiftMinutes').value = savedMinutes;
         
         if (savedShiftEnd) {
             resumeCountdown(Number(savedShiftEnd));
@@ -287,9 +359,18 @@
 
         const [punchHours, punchMinutes] = timeInput.split(':').map(Number);
 
-        const isBeforeCutoff = (punchHours < 10) || (punchHours === 10 && punchMinutes < 30);
-        let totalShiftHours = 8;
-        let totalShiftMinutes = isBeforeCutoff ? 15 : 30;
+        // Get configured shift length
+        let totalShiftHours = parseInt(document.getElementById('shiftHours').value) || 0;
+        let totalShiftMinutes = parseInt(document.getElementById('shiftMinutes').value) || 0;
+
+        if (totalShiftHours === 0 && totalShiftMinutes === 0) {
+            alert("Please enter a valid shift length.");
+            return;
+        }
+
+        // Save preferences to local storage
+        localStorage.setItem('mintShiftHours', totalShiftHours);
+        localStorage.setItem('mintShiftMinutes', totalShiftMinutes);
 
         const targetDate = new Date();
         targetDate.setHours(punchHours + totalShiftHours);
@@ -321,7 +402,12 @@
         endEl.style.display = "block";
 
         isCountingDown = true;
+        
+        // Disable inputs while timer runs
         document.getElementById('punchTime').disabled = true;
+        document.getElementById('shiftHours').disabled = true;
+        document.getElementById('shiftMinutes').disabled = true;
+        document.getElementById('durationGroup').style.opacity = '0.5';
         
         const actionBtn = document.getElementById('actionBtn');
         actionBtn.innerText = "Reset";
@@ -360,7 +446,12 @@
     function resetTracker() {
         clearInterval(countdownInterval);
         isCountingDown = false;
+        
+        // Re-enable inputs
         document.getElementById('punchTime').disabled = false;
+        document.getElementById('shiftHours').disabled = false;
+        document.getElementById('shiftMinutes').disabled = false;
+        document.getElementById('durationGroup').style.opacity = '1';
         
         localStorage.removeItem('mintShiftEndTime');
         
